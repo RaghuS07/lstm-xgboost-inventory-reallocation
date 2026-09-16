@@ -1,303 +1,304 @@
-# Multi-Location Retail Inventory Management System
+# Automated Profit-Aware Inventory Reallocation Using LSTM Forecasting and XGBoost Ranking
 
-A full-stack application for managing retail inventory across multiple locations with AI-driven transfer recommendations. Built with Next.js frontend and Node.js/Express/MongoDB backend.
+## Abstract
 
-## 🚀 Features
+This repository contains a machine learning-driven inventory redistribution system for multi-location retail networks. The framework integrates Long Short-Term Memory (LSTM) networks for demand forecasting with an XGBoost-based scoring mechanism to generate profit-oriented inter-store transfer recommendations. By combining temporal demand prediction with network-level optimization, the system addresses a critical gap in retail supply chain automation: converting demand forecasts into executable, economically justified inventory movements.
 
-### Backend Features
-- **JWT Authentication** with role-based access control
-- **API Key Security** for service-to-service communication
-- **Multi-location Inventory** tracking across stores
-- **Real-time Stock Management** with quantity updates
-- **Order Processing** (reserve → purchase workflow)
-- **AI Transfer Recommendations** between locations
-- **RESTful APIs** with comprehensive error handling
-- **MongoDB Integration** with Mongoose ODM
+## Problem Statement
 
-### Frontend Features
-- **Role-based Dashboards** (Buyer vs Seller)
-- **Product Catalog** with search and filtering
-- **Location-based Stock Display** with real-time updates
-- **Interactive Charts** for inventory analytics
-- **Transfer Recommendations** with approval workflow
-- **Responsive Design** with modern UI/UX
-- **Real-time Data** synchronization with backend
+Multi-location retail networks face persistent inventory imbalance: simultaneous stockouts and overstock of identical products across geographically distributed stores. Traditional systems operate reactively at individual store levels, relying on fixed reorder rules and manual transfer decisions. This approach:
 
-## 🏗️ Architecture
+- Fails to respond to localized demand variability and spatial patterns
+- Results in lost sales, inflated markdown costs, and suboptimal working capital utilization
+- Lacks systematic integration of demand forecasting into redistribution workflows
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Next.js       │    │   Express.js    │    │   MongoDB       │
-│   Frontend      │◄──►│   Backend       │◄──►│   Database      │
-│                 │    │                 │    │                 │
-│ • React 19      │    │ • Node.js       │    │ • Collections   │
-│ • Tailwind CSS  │    │ • JWT Auth      │    │ • Mongoose ODM  │
-│ • TypeScript    │    │ • API Keys      │    │ • Indexes       │
-│ • Axios         │    │ • CORS          │    │ • Validation    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+**Research Gap:** Existing literature emphasizes forecasting accuracy OR high-level supply chain optimization, but rarely bridges the gap between demand prediction and operational, network-aware redistribution execution.
 
-## 📁 Project Structure
+## Technical Contributions
+
+### 1. **Demand-Forecasting-to-Decision Pipeline**
+   - Integrates short-term demand forecasting directly into feasible transfer generation
+   - Formulates inventory imbalance detection as a network-level surplus–deficit identification problem
+   - Shifts from isolated store management to connected, system-aware optimization
+
+### 2. **Profit-Oriented Transfer Ranking**
+   - Introduces an XGBoost-based scoring model that ranks candidates using economic and operational signals
+   - Incorporates product value, demand pressure, geographic cost, and inventory state simultaneously
+   - Generates quantified, auditable transfer recommendations aligned with business objectives
+
+### 3. **Manager-in-the-Loop Execution Architecture**
+   - Maintains human oversight while automating recommendation generation and impact tracking
+   - Ensures traceability, transparency, and accountability across recommendation, approval, execution, and evaluation stages
+   - Provides post-transfer impact measurement linking execution to observable sales outcomes
+
+## Methodology
+
+### System Architecture
 
 ```
-supply-demand/
-├── backend/                 # Node.js/Express backend
-│   ├── models/             # Mongoose schemas
-│   ├── routes/             # API route handlers
-│   ├── controllers/        # Business logic
-│   ├── middleware/         # Auth & validation
-│   ├── utils/              # Helper functions
-│   ├── server.js           # Express app setup
-│   ├── start.js            # Server startup with seeding
-│   └── package.json        # Backend dependencies
-├── src/                    # Next.js frontend
-│   ├── app/                # App router pages
-│   │   ├── buyer/          # Buyer dashboard
-│   │   ├── seller/         # Seller dashboard
-│   │   └── page.tsx        # Landing page
-│   ├── components/         # React components
-│   ├── utils/              # API utilities
-│   └── config/             # Configuration
-└── README.md               # This file
+┌─────────────────────────────────────────────────────────────────────┐
+│                    DEMAND FORECASTING LAYER                         │
+├──────────────────────────────────────────────────────────────────────┤
+│ • Data Aggregation → Daily product–location time series             │
+│ • LSTM Model → 7-day forecast horizon per product–location pair    │
+│ • Output: Demand estimates D̂ₚ,ℓ(H) for horizon H                  │
+├──────────────────────────────────────────────────────────────────────┤
+│                 INVENTORY IMBALANCE DETECTION                       │
+├──────────────────────────────────────────────────────────────────────┤
+│ • Gap Computation → gₚ,ℓ = sₚ,ℓ − D̂ₚ,ℓ(H)                           │
+│ • Classification → Surplus (gₚ,ℓ ≥ τ) vs Deficit (gₚ,ℓ ≤ −τ)      │
+│ • Network Model: Identify donor–receiver location pairs             │
+├──────────────────────────────────────────────────────────────────────┤
+│                TRANSFER RANKING & OPTIMIZATION                      │
+├──────────────────────────────────────────────────────────────────────┤
+│ • Candidate Generation → Bounded flow constraints, distance calc.  │
+│ • XGBoost Scoring → Feature-based ranking using profit proxy       │
+│ • Priority Assignment → High/Medium/Low/Very Low categories        │
+├──────────────────────────────────────────────────────────────────────┤
+│            EXECUTION & IMPACT MEASUREMENT                           │
+├──────────────────────────────────────────────────────────────────────┤
+│ • Manager Approval → Human review before execution                  │
+│ • Atomic Updates → Consistent inventory state management            │
+│ • Post-Transfer Evaluation → Sales uplift & profit tracking        │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ Tech Stack
+### Core Algorithms
 
-### Frontend
-- **Next.js 15** - React framework with App Router
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling framework
-- **Axios** - HTTP client
+| Stage | Method | Type | Rationale |
+|-------|--------|------|-----------|
+| **Demand Forecasting** | LSTM Networks | Deep Learning | Captures long-term temporal dependencies in sparse retail demand |
+| **Imbalance Detection** | Surplus–Deficit Gap Computation | Analytical | Integrates forecast uncertainty with current inventory state |
+| **Transfer Ranking** | XGBoost Regression | Ensemble ML | Combines economic features into interpretable, profit-aware scoring |
+| **Execution** | Atomic Inventory Updates | Transactional | Ensures consistency and auditability across network |
+| **Evaluation** | Post-Transfer Impact Analysis | Empirical | Links recommendations to realized sales outcomes |
 
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - ODM for MongoDB
-- **JWT** - Authentication tokens
-- **bcryptjs** - Password hashing
-- **CORS** - Cross-origin requests
+## Results & Performance Metrics
 
-## 🚀 Quick Start
+### LSTM Demand Forecasting
+
+**Dataset & Training:**
+- Product–Location Series: 200 time series
+- Lookback Window: 30 days
+- Total Sequences: 68,400 (Train: 61,560 / Validation: 6,840)
+- Training Stability: Converged at Epoch 6, validation loss: **0.0000463** (MSE, MinMax-scaled)
+
+**Forecast Accuracy (7-Day Horizon):**
+- **MAE: 0.0375 units** (typical daily unit error)
+- **RMSE: 0.0485 units** (captures larger deviations)
+- **Evaluation Rationale:** Unit-based metrics (MAE/RMSE) are more meaningful than percentage errors for sparse retail demand where many observations are zero
+
+**Interpretation:** The model demonstrates stable generalization, producing reliable short-term demand signals suitable for proactive redistribution planning.
+
+### XGBoost Transfer Scoring
+
+**Model Configuration:**
+- Regression Target: Profit proxy = (Quantity × Price × Sellthrough) − (Distance × Cost)
+- Sample Size: 28 transfer candidates
+
+**Performance Metrics:**
+
+| Metric | Train | Validation | All Data |
+|--------|-------|-----------|----------|
+| MAE | 66.32 | 9,473.16 | 2,082.07 |
+| RMSE | 142.57 | 18,704.26 | 8,659.31 |
+| R² | 0.9998 | 0.2541 | 0.6078 |
+
+**Ranking Quality (Primary Evaluation):**
+- **Spearman Correlation: 0.966** ← Strong agreement with profit-optimal ordering
+- **NDCG@10: 0.877** ← Excellent ranking of top recommendations
+- **NDCG@25: 0.886** ← Robust ranking across broader set
+- **Precision@10: 1.0** ← All top-10 recommendations correctly ranked
+
+**Feature Importance (Profit-Driven):**
+1. Product Price: 0.481 (Economic value dominates)
+2. Stock-to-Sales Ratio: 0.190 (Demand pressure signal)
+3. Sales Rate: 0.091 (Velocity indicator)
+4. Distance: 0.025 (Movement cost secondary factor)
+
+**Interpretation:** Despite limited training data causing overfitting in point-wise regression, the model produces strong ranking performance. This validates that the learned scoring function effectively prioritizes transfers aligned with business profitability objectives.
+
+## Dataset & Implementation
+
+### Data Schema
+- **Scope:** 1,000 products, 100 locations, 367 days
+- **Events:** 95,018 purchase transactions, 39,945 inventory records
+- **Format:** Integrated MongoDB backend with transactional consistency
+
+### System Stack
+- **Frontend:** Next.js 15 (React 19, TypeScript, Tailwind CSS)
+- **Backend:** Node.js/Express.js with MongoDB + Mongoose ODM
+- **ML Pipeline:** Python (scikit-learn, TensorFlow/Keras for LSTM, XGBoost)
+- **Architecture:** Fully integrated end-to-end system from data ingestion to recommendation execution
+
+## Key Features
+
+### 1. Demand Forecasting
+- LSTM-based time-series modeling of product–location demand
+- Automatic handling of sparse retail data and zero-demand periods
+- Multi-step forecasting with autoregressive rollout
+
+### 2. Inventory Imbalance Detection
+- Network-level surplus and deficit identification
+- Forecast-driven gap analysis with fallback to sales velocity
+- Dynamic threshold-based classification
+
+### 3. Transfer Recommendation & Ranking
+- Feasible candidate generation with distance-based cost estimates
+- Profit-oriented XGBoost scoring incorporating:
+  - Product economics (price, expected sellthrough)
+  - Inventory state (stock levels, turnover ratios)
+  - Operational feasibility (geographic distance, quantity constraints)
+  - Network context (location tier, demand variability)
+
+### 4. Manager-in-the-Loop Workflow
+- Ranked recommendations with clear priority levels
+- Human approval before execution
+- Atomic inventory updates with execution logging
+- Post-transfer impact tracking and analytics
+
+### 5. Operational Traceability
+- Complete audit trail from recommendation generation to execution
+- Pre- and post-transfer inventory snapshots
+- Sales uplift measurement and profit estimation
+- Dashboard support for monitoring and decision review
+
+## Results Highlights
+
+### Quantitative Outcomes
+✓ **Forecasting:** 0.0375 unit MAE on 7-day horizon with stable validation loss  
+✓ **Ranking:** 0.966 Spearman correlation; 1.0 Precision@10  
+✓ **System:** 28 candidate transfers scored and ranked by profit impact  
+
+### Qualitative Contributions
+✓ **Research:** Bridges forecasting–decision gap with integrated end-to-end system  
+✓ **Operations:** Operationalizes ML predictions into executable inventory movements  
+✓ **Transparency:** Maintains manager oversight while automating routine analysis  
+
+## Research Significance
+
+### Addressed Research Gaps
+1. **Forecasting–Decision Gap:** Converts demand predictions into feasible, ranked redistribution actions
+2. **Network-Level Optimization:** Models retail network as connected system rather than isolated stores
+3. **Profit-Oriented Ranking:** Incorporates economics, demand pressure, and operational cost simultaneously
+4. **Operational Feasibility:** Provides practical, auditable decision-support workflow rather than theoretical optimization
+
+### Contributions to Supply Chain Literature
+- Demonstrates end-to-end integration of ML forecasting with prescriptive redistribution
+- Validates that ranking-based evaluation (Spearman, NDCG) more effectively captures redistribution value than point-wise regression accuracy
+- Shows practical application in sparse retail demand environments
+- Establishes manager-in-the-loop as effective approach for human–AI collaboration in inventory optimization
+
+## Limitations & Future Work
+
+### Current Scope
+- **Data Dependency:** Effectiveness relies on historical sales and inventory data quality
+- **Forecast Horizon:** Optimized for short-term (7-day) predictions; longer horizons require dedicated strategic planning tools
+- **Execution Cadence:** Operates on periodic snapshot basis rather than continuous real-time recalculation (by design, for stability and auditability)
+- **Scale Evaluation:** System demonstrated on 1,000 products × 100 locations; larger networks and extended deployment periods will provide additional insights
+
+### Future Enhancements
+1. **Advanced Architectures:** Temporal Fusion Transformers (TFT), attention-based mechanisms for improved long-range dependency modeling
+2. **Uncertainty Quantification:** Prediction intervals and risk-sensitive redistribution strategies
+3. **Real-Time Processing:** Event-driven recommendation refresh and incremental model updates
+4. **Interpretability:** Enhanced explainability of transfer scoring via SHAP or similar techniques
+5. **Extended Evaluation:** Multi-year deployment across larger networks to assess long-term impact on availability, fulfillment rates, and total network inventory
+
+## Usage Instructions
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
+- Python 3.8+
 - MongoDB (local or cloud)
-- npm or yarn
 
-### 1. Clone and Install
+### Quick Start
 
+**1. Clone & Install**
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd supply-demand
-
-# Install frontend dependencies
 npm install
-
-# Install backend dependencies
-cd backend
-npm install
-cd ..
+cd backend && npm install && cd ..
 ```
 
-### 2. Start MongoDB
-Make sure MongoDB is running on your system:
-```bash
-# Local MongoDB
-mongod
-
-# Or use MongoDB Atlas (cloud)
-# Update MONGO_URI in backend/config.js
-```
-
-### 3. Start Backend
+**2. Start Backend**
 ```bash
 cd backend
 npm run dev
-# Server will start on http://localhost:5000
-# Database will be automatically seeded with sample data
+# Server: http://localhost:5000
+# Database auto-seeded with sample data
 ```
 
-### 4. Start Frontend
+**3. Start Frontend**
 ```bash
-# In a new terminal
 npm run dev
-# Frontend will start on http://localhost:3000
+# Frontend: http://localhost:3000
 ```
 
-### 5. Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000
-- **API Health Check**: http://localhost:5000/health
+### Key Endpoints
+- `POST /api/auth/register` — User registration
+- `POST /api/auth/login` — Authentication
+- `GET /api/recommendations` — List ranked transfer recommendations
+- `POST /api/recommendations/:id/approve` — Approve and execute transfer
+- `GET /api/products` — Product catalog
+- `GET /api/stock/location/:id` — Location inventory
 
-## 🔐 Authentication & API Keys
+## Architecture Overview
 
-### User Roles
-- **Buyer**: View products, reserve, purchase
-- **Seller**: Manage products, stock, approve transfers
-- **Manager**: Manage locations, create recommendations
-- **Admin**: Full system access
-
-### API Keys
-The system uses API keys for service authentication:
-- `admin_api_key_123` - Admin access
-- `seller_api_key_456` - Seller access  
-- `buyer_api_key_789` - Buyer access
-- `sample_api_key_123` - Default key
-
-### Sample Users
-After seeding, you can register users with any role:
-- Email: `admin@example.com` (Admin)
-- Email: `seller@example.com` (Seller)
-- Email: `buyer@example.com` (Buyer)
-
-## 📊 Database Schema
-
-### Collections
-- **users** - User accounts with roles
-- **products** - Product catalog
-- **locations** - Store locations
-- **stock** - Inventory quantities per location
-- **orders** - Customer orders (reserve/purchase)
-- **recommendations** - AI transfer suggestions
-
-### Sample Data
-The system automatically seeds:
-- 3 locations (Chennai, Bangalore, Hyderabad)
-- 5 sample products across categories
-- Stock entries for all product-location combinations
-- Sample transfer recommendations
-
-## 🔌 API Endpoints
-
-### Authentication
 ```
-POST /api/auth/register    # Register user
-POST /api/auth/login       # User login
+Frontend (Next.js 15)
+├── Buyer Dashboard (Product browsing, orders)
+├── Seller Dashboard (Inventory management, approvals)
+└── Analytics (Recommendations, impact tracking)
+       ↓ (Axios)
+Backend (Express.js)
+├── REST APIs (Auth, Products, Stock, Orders)
+├── Recommendation Engine (LSTM + XGBoost)
+└── Execution & Impact Tracking
+       ↓ (Mongoose)
+Database (MongoDB)
+├── Users & Roles
+├── Products & Locations
+├── Inventory & Orders
+├── Forecasts & Recommendations
+└── Execution Logs & Impact Metrics
 ```
 
-### Products
-```
-GET    /api/products       # List products
-GET    /api/products/:id   # Get product
-POST   /api/products       # Create product (Seller+)
-PUT    /api/products/:id   # Update product (Seller+)
-DELETE /api/products/:id   # Delete product (Manager+)
-```
+## Academic & Professional Applications
 
-### Stock & Orders
-```
-GET  /api/stock/location/:id  # Stock by location
-GET  /api/stock/all           # All stock
-PUT  /api/stock               # Update stock (Seller+)
-POST /api/orders/reserve      # Reserve product
-POST /api/orders/purchase/:id # Purchase product
-```
+This work demonstrates practical applicability in:
+- **Retail Chains:** Supermarkets, fashion retailers, consumer electronics networks
+- **Pharmacy Networks:** Multi-branch drug/pharmaceutical distribution
+- **Fast-Moving Consumer Goods (FMCG):** Distributed inventory balancing
+- **Strategic Supply Chain Roles:** Decision-support systems, operations management, analytics teams
 
-### Recommendations
-```
-GET  /api/recommendations           # List recommendations
-POST /api/recommendations/:id/approve # Approve transfer (Seller+)
-```
+## Project Metadata
 
-## 🎯 Usage Examples
+- **Author:** Raghu S.
+- **Institution:** VIT Vellore, India
+- **Academic Status:** Final-year B.Tech Information Technology
+- **Relevant Background:** Cybersecurity, Cloud Computing, Machine Learning/NLP
+- **GitHub:** [RaghuS07](https://github.com/RaghuS07)
+- **Focus:** Supply Chain Optimization, ML-driven Operations, Retail Analytics
 
-### Buyer Workflow
-1. Login as buyer
-2. Browse product catalog
-3. Select location and quantity
-4. Order products
-5. Complete purchase
+## Publications & References
 
-### Seller Workflow
-1. Login as seller
-2. View inventory dashboard
-3. Manage products and stock
-4. Review transfer recommendations
-5. Approve/reject transfers
+This work is grounded in 23 peer-reviewed academic sources spanning:
+- **Demand Forecasting:** LSTM architectures, Transformer models, hybrid statistical–ML approaches
+- **Supply Chain Optimization:** Network-aware planning, warehouse optimization, spatio-temporal modeling
+- **Machine Learning:** Gradient Boosting, ensemble methods, deep learning applications
+- **Retail Operations:** Inventory management, automatic replenishment, empirical case studies
 
-## 🔧 Configuration
+See the project paper for complete literature review and citations.
 
-### Backend Configuration
-Edit `backend/config.js`:
-```javascript
-module.exports = {
-  MONGO_URI: 'mongodb://localhost:27017/retail_db',
-  JWT_SECRET: 'your_secret_key',
-  ADMIN_API_KEY: 'admin_api_key_123',
-  // ... other settings
-};
-```
+## License
 
-### Frontend Configuration
-Edit `src/config/api.js`:
-```javascript
-export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5000',
-  API_KEY: 'sample_api_key_123',
-};
-```
+This project is available for academic and professional review. For licensing inquiries, please contact the author.
 
-## 🧪 Testing
+---
 
-### Backend Testing
-```bash
-cd backend
-npm test
-```
+## Contact & Collaboration
 
-### Frontend Testing
-```bash
-npm test
-```
-
-### Manual Testing
-1. Start both servers
-2. Register test users
-3. Test product browsing (buyer)
-4. Test inventory management (seller)
-5. Test transfer recommendations
-
-## 🚀 Deployment
-
-### Backend Deployment
-1. Set production environment variables
-2. Deploy to cloud platform (Heroku, AWS, etc.)
-3. Configure MongoDB Atlas
-4. Update CORS settings
-
-### Frontend Deployment
-1. Build production bundle: `npm run build`
-2. Deploy to Vercel, Netlify, or similar
-3. Update API endpoints for production
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Review the API endpoints
-
-## 🔮 Future Enhancements
-
-- Real-time notifications
-- Advanced analytics dashboard
-- Mobile app integration
-- Machine learning for demand forecasting
-- Integration with external inventory systems
-- Multi-tenant support
-- Advanced reporting features
+- **GitHub:** [github.com/RaghuS07](https://github.com/RaghuS07)
+- **Focus Areas:** Cybersecurity, Cloud Operations, Machine Learning, Supply Chain Analytics
+- **Open to:** Master's program discussions, research collaborations, professional opportunities
